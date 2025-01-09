@@ -36,7 +36,9 @@ class EspeakDriver:
                 raise RuntimeError(msg)
             current_voice = _espeak.GetCurrentVoice()
             if current_voice and current_voice.contents.name:
-                EspeakDriver._defaultVoice = current_voice.contents.name.decode("utf-8")
+                EspeakDriver._defaultVoice = (
+                    current_voice.contents.name.decode("utf-8")
+                )
             else:
                 # Fallback to a known default if no voice is set
                 EspeakDriver._defaultVoice = "gmw/en"  # Adjust this as needed
@@ -87,7 +89,9 @@ class EspeakDriver:
                 if v.languages:
                     try:
                         language_code_bytes = v.languages[1:]
-                        language_code = language_code_bytes.decode("utf-8", errors="ignore")
+                        language_code = language_code_bytes.decode(
+                            "utf-8", errors="ignore"
+                        )
                         kwargs["languages"] = [language_code]
                     except UnicodeDecodeError:
                         kwargs["languages"] = ["Unknown"]
@@ -117,10 +121,14 @@ class EspeakDriver:
                 return
             try:
                 utf8Value = str(value).encode("utf-8")
-                logging.debug(f"Attempting to set voice to: {value}")  # noqa: G004
+                logging.debug(
+                    f"Attempting to set voice to: {value}"
+                )  # noqa: G004
                 result = _espeak.SetVoiceByName(utf8Value)
                 if result == 0:  # EE_OK is 0
-                    logging.debug(f"Successfully set voice to: {value}")  # noqa: G004
+                    logging.debug(
+                        f"Successfully set voice to: {value}"
+                    )  # noqa: G004
                 elif result == 1:  # EE_BUFFER_FULL
                     msg = f"SetVoiceByName failed: EE_BUFFER_FULL while setting voice to {value}"
                     raise ValueError(msg)
@@ -143,7 +151,9 @@ class EspeakDriver:
                 raise ValueError(str(e))
         elif name == "volume":
             try:
-                _espeak.SetParameter(_espeak.VOLUME, int(round(value * 100, 2)), 0)
+                _espeak.SetParameter(
+                    _espeak.VOLUME, int(round(value * 100, 2)), 0
+                )
             except TypeError as e:
                 raise ValueError(str(e))
         elif name == "pitch":
@@ -161,18 +171,6 @@ class EspeakDriver:
         """
         self._save_file = filename
         self._text_to_say = text
-
-    def _start_synthesis(self, text):
-        self._proxy.setBusy(True)
-        self._proxy.notify("started-utterance")
-        self._speaking = True
-        self._data_buffer = b""  # Ensure buffer is cleared before starting
-        try:
-            _espeak.Synth(str(text).encode("utf-8"), flags=_espeak.ENDPAUSE | _espeak.CHARS_UTF8)
-        except Exception as e:
-            self._proxy.setBusy(False)
-            self._proxy.notify("error", exception=e)
-            raise
 
     def _onSynth(self, wav, numsamples, events):  # noqa: C901,PLR0912,PLR0915
         """
@@ -216,7 +214,9 @@ class EspeakDriver:
                         raise RuntimeError(msg)
                 else:
                     try:
-                        with NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
+                        with NamedTemporaryFile(
+                            suffix=".wav", delete=False
+                        ) as temp_wav:
                             with wave.open(temp_wav, "wb") as f:
                                 f.setnchannels(1)  # Mono
                                 f.setsampwidth(2)  # 16-bit samples
@@ -228,11 +228,15 @@ class EspeakDriver:
 
                         # Playback functionality (for say method)
                         if platform.system() == "Darwin":  # macOS
-                            subprocess.run(["afplay", temp_wav_name], check=True)
+                            subprocess.run(
+                                ["afplay", temp_wav_name], check=True
+                            )
                         elif platform.system() == "Linux":
                             os.system(f"aplay {temp_wav_name} -q")
                         elif platform.system() == "Windows":
-                            winsound.PlaySound(temp_wav_name, winsound.SND_FILENAME)
+                            winsound.PlaySound(
+                                temp_wav_name, winsound.SND_FILENAME
+                            )
 
                         # Remove the file after playback
                         os.remove(temp_wav_name)  # noqa: PTH107
@@ -251,7 +255,9 @@ class EspeakDriver:
 
         # Accumulate audio data if available
         if numsamples > 0:
-            self._data_buffer += ctypes.string_at(wav, numsamples * ctypes.sizeof(ctypes.c_short))
+            self._data_buffer += ctypes.string_at(
+                wav, numsamples * ctypes.sizeof(ctypes.c_short)
+            )
 
         return 0
 
@@ -267,8 +273,6 @@ class EspeakDriver:
             if first:
                 self._proxy.setBusy(False)
                 first = False
-                if self._text_to_say:
-                    self._start_synthesis(self._text_to_say)
             self.iterate()
             time.sleep(0.01)
 
@@ -283,4 +287,16 @@ class EspeakDriver:
             self.endLoop()
 
     def say(self, text):
-        self._text_to_say = text
+        self._proxy.setBusy(True)
+        self._proxy.notify("started-utterance")
+        self._speaking = True
+
+        try:
+            _espeak.Synth(
+                str(text).encode("utf-8"),
+                flags=_espeak.ENDPAUSE | _espeak.CHARS_UTF8,
+            )
+        except Exception as e:
+            self._proxy.setBusy(False)
+            self._proxy.notify("error", exception=e)
+            raise
