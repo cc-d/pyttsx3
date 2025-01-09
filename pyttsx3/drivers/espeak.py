@@ -287,16 +287,17 @@ class EspeakDriver:
             self.endLoop()
 
     def say(self, text):
-        self._proxy.setBusy(True)
-        self._proxy.notify("started-utterance")
         self._speaking = True
 
         try:
+            self._proxy.notify('started-utterance')
             _espeak.Synth(
                 str(text).encode("utf-8"),
                 flags=_espeak.ENDPAUSE | _espeak.CHARS_UTF8,
             )
+            self._proxy.setBusy(False)
         except Exception as e:
             self._proxy.setBusy(False)
             self._proxy.notify("error", exception=e)
             raise
+        self._speaking = False

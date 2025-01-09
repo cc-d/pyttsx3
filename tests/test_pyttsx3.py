@@ -30,7 +30,9 @@ def test_engine_name(engine) -> None:
     assert repr(engine) == f"pyttsx3.engine.Engine('{expected}', debug=False)"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="TODO: Fix this test to pass on Windows")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="TODO: Fix this test to pass on Windows"
+)
 def test_speaking_text(engine) -> None:
     engine.say("Sally sells seashells by the seashore.")
     engine.say(quick_brown_fox)
@@ -38,7 +40,10 @@ def test_speaking_text(engine) -> None:
     engine.runAndWait()
 
 
-@pytest.mark.skipif(sys.platform not in ("darwin", "ios"), reason="Testing only on macOS and iOS")
+@pytest.mark.skipif(
+    sys.platform not in ("darwin", "ios"),
+    reason="Testing only on macOS and iOS",
+)
 def test_apple_avspeech_voices(engine):
     import platform
 
@@ -61,10 +66,19 @@ def test_apple_avspeech_voices(engine):
     # On macOS v14.x, nsss has 143 voices.
     # On macOS v15.x, nsss has 176 voices
     print(f"On macOS v{macos_version}, {engine} has {len(voices) = } voices.")
-    assert len(voices) in (176, 143), "Expected 176 or 143 voices on macOS and iOS"
+    assert len(voices) in (
+        176,
+        143,
+    ), "Expected 176 or 143 voices on macOS and iOS"
     # print("\n".join(voice.id for voice in voices))
-    en_us_voices = [voice for voice in voices if voice.id.startswith("com.apple.eloquence.en-US.")]
-    assert len(en_us_voices) == 8, "Expected 8 com.apple.eloquence.en-US voices on macOS and iOS"
+    en_us_voices = [
+        voice
+        for voice in voices
+        if voice.id.startswith("com.apple.eloquence.en-US.")
+    ]
+    assert (
+        len(en_us_voices) == 8
+    ), "Expected 8 com.apple.eloquence.en-US voices on macOS and iOS"
     names = []
     for _voice in en_us_voices:
         engine.setProperty("voice", _voice.id)
@@ -72,13 +86,18 @@ def test_apple_avspeech_voices(engine):
         names.append(name)
         engine.say(f"{name} says hello.")
     name_str = ", ".join(names)
-    assert name_str == "Eddy, Flo, Grandma, Grandpa, Reed, Rocko, Sandy, Shelley"
+    assert (
+        name_str == "Eddy, Flo, Grandma, Grandpa, Reed, Rocko, Sandy, Shelley"
+    )
     print(f"({name_str})", end=" ", flush=True)
     engine.runAndWait()
     engine.setProperty("voice", voice)  # Reset voice to original value
 
 
-@pytest.mark.skipif(sys.platform not in ("darwin", "ios"), reason="Testing only on macOS and iOS")
+@pytest.mark.skipif(
+    sys.platform not in ("darwin", "ios"),
+    reason="Testing only on macOS and iOS",
+)
 def test_apple_nsss_voices(engine):
     import platform
 
@@ -86,7 +105,9 @@ def test_apple_nsss_voices(engine):
     print(f"{sys.platform = }, {macos_version = } on {macos_hardware = }")
     print(list(pyttsx3._activeEngines))
     print(engine)
-    assert str(engine) == "nsss", "Expected engine name to be nsss on macOS and iOS"
+    assert (
+        str(engine) == "nsss"
+    ), "Expected engine name to be nsss on macOS and iOS"
     voice = engine.getProperty("voice")
     # On macOS v14.x, the default nsss voice is com.apple.voice.compact.en-US.Samantha.
     # ON macOS v15.x, the default nsss voice is ""
@@ -98,10 +119,19 @@ def test_apple_nsss_voices(engine):
     # On macOS v14.x, nsss has 143 voices.
     # On macOS v15.x, nsss has 176 voices
     print(f"On macOS v{macos_version}, {engine} has {len(voices) = } voices.")
-    assert len(voices) in (176, 143), "Expected 176 or 143 voices on macOS and iOS"
+    assert len(voices) in (
+        176,
+        143,
+    ), "Expected 176 or 143 voices on macOS and iOS"
     # print("\n".join(voice.id for voice in voices))
-    en_us_voices = [voice for voice in voices if voice.id.startswith("com.apple.eloquence.en-US.")]
-    assert len(en_us_voices) == 8, "Expected 8 com.apple.eloquence.en-US voices on macOS and iOS"
+    en_us_voices = [
+        voice
+        for voice in voices
+        if voice.id.startswith("com.apple.eloquence.en-US.")
+    ]
+    assert (
+        len(en_us_voices) == 8
+    ), "Expected 8 com.apple.eloquence.en-US voices on macOS and iOS"
     names = []
     for _voice in en_us_voices:
         engine.setProperty("voice", _voice.id)
@@ -109,7 +139,9 @@ def test_apple_nsss_voices(engine):
         names.append(name)
         engine.say(f"{name} says {quick_brown_fox}")
     name_str = ", ".join(names)
-    assert name_str == "Eddy, Flo, Grandma, Grandpa, Reed, Rocko, Sandy, Shelley"
+    assert (
+        name_str == "Eddy, Flo, Grandma, Grandpa, Reed, Rocko, Sandy, Shelley"
+    )
     print(f"({name_str})", end=" ", flush=True)
     engine.runAndWait()
     engine.setProperty("voice", voice)  # Reset voice to original value
@@ -134,14 +166,25 @@ def test_saving_to_file(engine, tmp_path: Path) -> None:
     # Check if the file is a valid .wav file using the wave module
     try:
         with wave.open(str(test_file), "rb") as wf:
-            assert wf.getnchannels() == 1, "The audio file should have 1 channel (mono)"
-            assert wf.getsampwidth() == 2, "Audio file sample width should be 2 bytes"
-            assert wf.getframerate() == 22050, "Audio file framerate should be 22050 Hz"
+            assert (
+                wf.getnchannels() == 1
+            ), "The audio file should have 1 channel (mono)"
+            assert (
+                wf.getsampwidth() == 2
+            ), "Audio file sample width should be 2 bytes"
+            assert (
+                wf.getframerate() == 22050
+            ), "Audio file framerate should be 22050 Hz"
     except wave.Error:
-        assert sys.platform in {"darwin", "ios"}, "Apple writes .aiff, not .wav files."
+        assert sys.platform in {
+            "darwin",
+            "ios",
+        }, "Apple writes .aiff, not .wav files."
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="TODO: Fix this test to pass on Windows")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="TODO: Fix this test to pass on Windows"
+)
 def test_listening_for_events(engine) -> None:
     onStart = mock.Mock()
     onWord = mock.Mock()
@@ -178,7 +221,9 @@ def test_interrupting_utterance(engine) -> None:
     assert onWord_mock.called
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="TODO: Fix this test to pass on Windows")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="TODO: Fix this test to pass on Windows"
+)
 def test_changing_speech_rate(engine) -> None:
     rate = engine.getProperty("rate")
     rate_plus_fifty = rate + 50
@@ -188,7 +233,9 @@ def test_changing_speech_rate(engine) -> None:
     engine.setProperty("rate", rate)  # Reset rate to original value
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="TODO: Fix this test to pass on Windows")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="TODO: Fix this test to pass on Windows"
+)
 def test_changing_volume(engine) -> None:
     volume = engine.getProperty("volume")
     volume_minus_a_quarter = volume - 0.25
@@ -198,16 +245,24 @@ def test_changing_volume(engine) -> None:
     engine.setProperty("volume", volume)  # Reset volume to original value
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="TODO: Fix this test to pass on Windows")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="TODO: Fix this test to pass on Windows"
+)
 def test_changing_voices(engine) -> None:
     voices = engine.getProperty("voices")
-    for voice in voices:  # TODO: This could be lots of voices! (e.g. 176 on macOS v15.x)
+    for (
+        voice
+    ) in (
+        voices
+    ):  # TODO: This could be lots of voices! (e.g. 176 on macOS v15.x)
         engine.setProperty("voice", voice.id)
-        engine.say(f"{voice.id = }. {quick_brown_fox}")
+        engine.say(f"{voice.id }. {quick_brown_fox}")
     engine.runAndWait()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="TODO: Fix this test to pass on Windows")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="TODO: Fix this test to pass on Windows"
+)
 def test_running_driver_event_loop(engine) -> None:
     def onStart(name) -> None:
         print("starting", name)
