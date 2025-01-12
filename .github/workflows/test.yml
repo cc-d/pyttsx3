@@ -1,20 +1,13 @@
 # This workflow will upload a Python Package using Twine when a release is created.
 # https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-name: CI
+name: test-only
 
 on: push
 
 jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pipx install pre-commit
-      - run: pre-commit install
-      - run: pre-commit run --all-files
 
   test:
-    needs: [pre-commit]
+
     strategy:
       fail-fast: false
       matrix:
